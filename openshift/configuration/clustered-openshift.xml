@@ -164,8 +164,19 @@
             </datasources>
         </subsystem>
 <!-- ##INFINISPAN_ENDPOINT## -->
-        <subsystem xmlns="urn:infinispan:server:core:8.5" default-cache-container="clustered">
-          <!-- ##INFINISPAN_CORE## -->
+        <subsystem xmlns="urn:infinispan:server:core:8.5" default-cache-container="custom">
+            <cache-container name="custom" default-cache="default">
+                <transport channel="cluster"/>
+                <global-state/>
+                <distributed-cache name="custom-cache"/>
+            </cache-container>
+
+            <!-- REQUIRED BY ENDPOINTS -->
+            <cache-container name="clustered" default-cache="default">
+                <transport channel="cluster"/>
+                <global-state/>
+                <distributed-cache name="default" mode="SYNC"/>
+            </cache-container>
         </subsystem>
         <subsystem xmlns="urn:infinispan:server:jgroups:8.0">
             <channels default="cluster">
