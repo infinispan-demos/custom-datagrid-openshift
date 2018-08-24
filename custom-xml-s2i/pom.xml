@@ -5,7 +5,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>demo</groupId>
-   <artifactId>custom-datagrid-openshift</artifactId>
+   <artifactId>custom-xml-s2i</artifactId>
    <version>1.0-SNAPSHOT</version>
 
    <properties>

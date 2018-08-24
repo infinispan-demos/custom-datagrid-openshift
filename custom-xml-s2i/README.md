@@ -1,4 +1,4 @@
-# S2I for custom configuration
+# S2I for custom XML configuration
 
 ## Trying it out
 
