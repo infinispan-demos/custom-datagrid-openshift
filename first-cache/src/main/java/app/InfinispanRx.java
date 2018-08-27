@@ -22,7 +22,7 @@ final class InfinispanRx {
    ) {
       return vertx
          .rxExecuteBlocking(InfinispanRx.<K, V>createCache(cacheName, remote))
-         .map(RxCacheImpl::new);
+         .map(cache -> new RxCacheImpl<>(cache, vertx));
    }
 
    <K, V> Single<RxCache<K, V>> getCache(
@@ -31,7 +31,7 @@ final class InfinispanRx {
    ) {
       return vertx
          .rxExecuteBlocking(InfinispanRx.<K, V>getCache(cacheName, remote))
-         .map(RxCacheImpl::new);
+         .map(cache -> new RxCacheImpl<>(cache, vertx));
    }
 
    static Single<InfinispanRx> connect(
@@ -56,6 +56,13 @@ final class InfinispanRx {
       return f -> f.complete(
          remote.administration().createCache(cacheName, "replicated")
       );
+   }
+
+   private static <K, V> Handler<Future<RemoteCache<K, V>>> getCache(
+      String cacheName
+      , RemoteCacheManager remote
+   ) {
+      return f -> f.complete(remote.getCache(cacheName));
    }
 
 }

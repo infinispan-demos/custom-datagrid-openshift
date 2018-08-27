@@ -1,10 +1,9 @@
 package app;
 
+import io.reactivex.Single;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
 import java.util.UUID;
@@ -25,7 +24,7 @@ public class Main extends AbstractVerticle {
    public void start(io.vertx.core.Future<Void> future) {
       Router router = Router.router(vertx);
       router.get("/create-cache").handler(this::createCache);
-//      router.get("/get-cache").handler(this::test);
+      router.get("/get-cache").handler(this::getCache);
 
       ConfigurationBuilder cfg = new ConfigurationBuilder();
 
@@ -65,22 +64,28 @@ public class Main extends AbstractVerticle {
          );
    }
 
-//   private void getCache(RoutingContext rc) {
-//      ConfigurationBuilder testCfg = new ConfigurationBuilder();
-//
-//      testCfg
-//         .addServer()
-//         .host("datagrid-app-hotrod")
-//         .port(11333); // TODO why 11333?
-//
-//      final RemoteCacheManager remote = new RemoteCacheManager(testCfg.build());
-//
-//      final RemoteCache<String, String> cache = remote.getCache("custom-cache");
-//
-//      cache.put("hello", "world");
-//      String value = cache.get("hello");
-//
-//      rc.response().end("Value is: " + value);
-//   }
+   private void getCache(RoutingContext rc) {
+      infinispan
+         .getCache(cacheName, vertx)
+         .flatMap(rxCache ->
+            rxCache
+               .put("sample-key", "sample-value")
+               .andThen(Single.just(rxCache))
+         )
+         .flatMapMaybe(rxCache ->
+            rxCache.get("sample-key")
+         )
+         .subscribe(
+            x ->
+               rc.response().end(String.format(
+                  "Got cache, put/get returned: %s", x
+               ))
+            ,
+            failure -> {
+               log.log(Level.SEVERE, "Failure starting injectors", failure);
+               rc.response().end("Failure starting injectors: " + failure);
+            }
+         );
+   }
 
 }
