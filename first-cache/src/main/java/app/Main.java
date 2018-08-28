@@ -23,28 +23,38 @@ public class Main extends AbstractVerticle {
    @Override
    public void start(io.vertx.core.Future<Void> future) {
       Router router = Router.router(vertx);
+      router.get("/connect").handler(this::connect);
       router.get("/create-cache").handler(this::createCache);
       router.get("/get-cache").handler(this::getCache);
 
-      ConfigurationBuilder cfg = new ConfigurationBuilder();
-
-      cfg
-         .addServer()
-         .host("caching-service-app-hotrod")
-         .port(11222);
 
       vertx
          .createHttpServer()
          .requestHandler(router::accept)
          .rxListen(8080)
-         .flatMap(s -> InfinispanRx.connect(cfg, vertx))
          .subscribe(
-            infinispan -> {
-               log.info("Http server started and connected to Infinispan");
-               this.infinispan = infinispan;
+            server -> {
+               log.info("Http server started");
                future.complete();
             }
             , future::fail
+         );
+   }
+
+   private void connect(RoutingContext rc) {
+      ConfigurationBuilder cfg =
+         InfinispanCfg.create("caching-service-app-hotrod");
+
+      InfinispanRx.connect(cfg, vertx)
+         .subscribe(
+            infinispan -> {
+               this.infinispan = infinispan;
+               rc.response().end("Infinispan connection successful");
+            }
+            , t -> {
+               log.log(Level.SEVERE, "Unable to connect to Infinispan", t);
+               rc.response().end("Unable to connect to Infinispan: " + t);
+            }
          );
    }
 
@@ -56,10 +66,9 @@ public class Main extends AbstractVerticle {
          .subscribe(
             x ->
                rc.response().end(String.format("Cache %s created", cacheName))
-            ,
-            failure -> {
-               log.log(Level.SEVERE, "Failure starting injectors", failure);
-               rc.response().end("Failure starting injectors: " + failure);
+            , failure -> {
+               log.log(Level.SEVERE, "Failure creating cache", failure);
+               rc.response().end("Failure creating cache: " + failure);
             }
          );
    }
@@ -80,8 +89,7 @@ public class Main extends AbstractVerticle {
                rc.response().end(String.format(
                   "Got cache, put/get returned: %s", x
                ))
-            ,
-            failure -> {
+            , failure -> {
                log.log(Level.SEVERE, "Failure starting injectors", failure);
                rc.response().end("Failure starting injectors: " + failure);
             }

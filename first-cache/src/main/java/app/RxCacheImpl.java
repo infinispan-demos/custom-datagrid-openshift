@@ -25,7 +25,7 @@ final class RxCacheImpl<K, V> implements RxCache<K, V> {
                f.complete();
             }
          )
-         .ignoreElement();
+         .toCompletable();
    }
 
    @Override
