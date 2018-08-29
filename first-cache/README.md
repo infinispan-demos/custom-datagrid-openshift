@@ -50,3 +50,9 @@ Infinispan connection successful
 $ curl http://app-myproject.127.0.0.1.nip.io/get-cache
 ...
 ```
+
+# TODO
+
+Test cache metadata survival in multi node environment.
+If using replicated caches, invocations are round robing.
+So with N pods, you could try to get the cache and do a get N times. 
