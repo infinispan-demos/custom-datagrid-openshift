@@ -7,6 +7,7 @@ import io.vertx.reactivex.core.Vertx;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.commons.api.CacheContainerAdmin;
 
 final class InfinispanRx {
 
@@ -54,7 +55,9 @@ final class InfinispanRx {
       , RemoteCacheManager remote
    ) {
       return f -> f.complete(
-         remote.administration().createCache(cacheName, "replicated")
+         remote.administration()
+            .withFlags(CacheContainerAdmin.AdminFlag.PERMANENT)
+            .createCache(cacheName, "replicated")
       );
    }
 
