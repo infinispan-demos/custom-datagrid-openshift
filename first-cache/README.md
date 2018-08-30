@@ -15,7 +15,7 @@ oc cluster up
 $ ./first-deploy.sh
 ...
 
-$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app
+$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching-service
 Infinispan connection successful
 
 $ curl http://app-myproject.127.0.0.1.nip.io/create-cache 
@@ -44,7 +44,7 @@ statefulset.apps "caching-service-app" scaled
 $ oc scale statefulsets caching-service-app --replicas=1
 statefulset.apps "caching-service-app" scaled
 
-$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app
+$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching-service
 Infinispan connection successful
 
 $ curl http://app-myproject.127.0.0.1.nip.io/get-cache

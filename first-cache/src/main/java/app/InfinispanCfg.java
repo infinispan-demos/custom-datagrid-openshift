@@ -31,7 +31,7 @@ class InfinispanCfg {
    private InfinispanCfg() {
    }
 
-   static ConfigurationBuilder create(String svcName) {
+   static ConfigurationBuilder create(String svcName, String saslName) {
       createTruststoreFromCrtFile(CRT_PATH, TRUSTSTORE_PATH, TRUSTSTORE_PASSWORD);
 
       final ConfigurationBuilder cfg = new ConfigurationBuilder();
@@ -45,7 +45,7 @@ class InfinispanCfg {
             .username("test")
             .password("test")
             .realm("ApplicationRealm")
-            .serverName("caching-service")
+            .serverName(saslName)
             .saslMechanism("DIGEST-MD5")
             .saslQop(SaslQop.AUTH)
          .ssl()
