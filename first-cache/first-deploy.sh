@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e -x
 
+oc login -u developer -p developer
 oc project myproject
 
 APP=app
