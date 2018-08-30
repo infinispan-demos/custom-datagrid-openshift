@@ -8,7 +8,7 @@ APP=app
 # || true to make it idempotent
 oc new-build --binary --name=${APP} -l app=${APP} || true
 
-mvn clean dependency:copy-dependencies compile -DincludeScope=runtime
+mvn -s settings.xml clean dependency:copy-dependencies compile -DincludeScope=runtime
 
 oc start-build ${APP} --from-dir=. --follow
 
