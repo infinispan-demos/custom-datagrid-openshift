@@ -25,6 +25,7 @@ public class Main extends AbstractVerticle {
       Router router = Router.router(vertx);
       router.get("/connect/:appName/:saslName").handler(this::connect);
       router.get("/create-cache").handler(this::createCache);
+      router.get("/destroy-cache").handler(this::destroyCache);
       router.get("/get-cache").handler(this::getCache);
 
       vertx
@@ -71,6 +72,19 @@ public class Main extends AbstractVerticle {
             , failure -> {
                log.log(Level.SEVERE, "Failure creating cache", failure);
                rc.response().end("Failure creating cache: " + failure);
+            }
+         );
+   }
+
+   private void destroyCache(RoutingContext rc) {
+      infinispan
+         .destroyCache(cacheName, vertx)
+         .subscribe(
+            () ->
+               rc.response().end(String.format("Cache %s destroyed", cacheName))
+            , failure -> {
+               log.log(Level.SEVERE, "Failure destroying cache", failure);
+               rc.response().end("Failure destroying cache: " + failure);
             }
          );
    }

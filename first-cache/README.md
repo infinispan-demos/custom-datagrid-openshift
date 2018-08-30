@@ -48,10 +48,33 @@ $ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching
 Infinispan connection successful
 
 $ curl http://app-myproject.127.0.0.1.nip.io/get-cache
-...
+Got cache, put/get returned: sample-value
 ```
 
-# TODO
+# Test cache metadata survival on multi-node
+
+Start by deleting any created caches during the session:
+
+```bash
+$ curl http://app-myproject.127.0.0.1.nip.io/destroy-cache
+Cache e8814aa2-f11f-4f64-baa5-e34feeb6baa0-0 destroyed
+```
+
+TODO 1: 
+Scale service to 2 nodes
+Create a cache (repl)
+Exercise 2 times
+Scale down to 0
+Scale up to 2 nodes
+Exercise 2 times
+
+TODO 1:
+Scale service 1 node
+Create a cache (repl)
+Exercise 1 times
+Scale down to 0
+Scale up to 2 nodes
+Exercise 2 times
 
 Test cache metadata survival in multi node environment.
 If using replicated caches, invocations are round robing.
