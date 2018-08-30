@@ -21,7 +21,7 @@ Infinispan connection successful
 $ curl http://app-myproject.127.0.0.1.nip.io/create-cache 
 Cache f62e4b80-90ca-44ec-9085-231dd9b60335-0 created
 
-$ curl http://app-myproject.127.0.0.1.nip.io/get-cache
+$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
 Got cache, put/get returned: sample-value
 ```
 
@@ -47,17 +47,42 @@ statefulset.apps "caching-service-app" scaled
 $ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching-service
 Infinispan connection successful
 
-$ curl http://app-myproject.127.0.0.1.nip.io/get-cache
+$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
 Got cache, put/get returned: sample-value
 ```
 
-# Test cache metadata survival on multi-node
+# Test cache metadata survival on multi-node (2 -> 2)
 
 Start by deleting any created caches during the session:
 
 ```bash
 $ curl http://app-myproject.127.0.0.1.nip.io/destroy-cache
 Cache e8814aa2-f11f-4f64-baa5-e34feeb6baa0-0 destroyed
+```
+
+Next, try out and make sure it works:
+
+```bash
+$ oc scale statefulsets caching-service-app --replicas=2
+statefulset.apps "caching-service-app" scaled
+
+$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching-service
+Infinispan connection successful
+
+$ curl http://app-myproject.127.0.0.1.nip.io/create-cache 
+Cache f62e4b80-90ca-44ec-9085-231dd9b60335-0 created
+
+$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/2
+Got cache, 2 calls to put/get returned: [sample-value, sample-value]
+
+$ oc scale statefulsets caching-service-app --replicas=0
+statefulset.apps "caching-service-app" scaled
+
+$ oc scale statefulsets caching-service-app --replicas=2
+statefulset.apps "caching-service-app" scaled
+
+$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/2
+Got cache, 2 calls to put/get returned: [sample-value, sample-value]
 ```
 
 TODO 1: 

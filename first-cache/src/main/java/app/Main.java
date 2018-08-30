@@ -6,6 +6,7 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,7 +27,7 @@ public class Main extends AbstractVerticle {
       router.get("/connect/:appName/:saslName").handler(this::connect);
       router.get("/create-cache").handler(this::createCache);
       router.get("/destroy-cache").handler(this::destroyCache);
-      router.get("/get-cache").handler(this::getCache);
+      router.get("/get-cache/:numCalls").handler(this::getCache);
 
       vertx
          .createHttpServer()
@@ -90,6 +91,9 @@ public class Main extends AbstractVerticle {
    }
 
    private void getCache(RoutingContext rc) {
+      String numCallsParam = rc.request().getParam("numCalls");
+      int numCalls = Integer.parseInt(numCallsParam);
+
       infinispan
          .getCache(cacheName, vertx)
          .flatMap(rxCache ->
@@ -100,10 +104,17 @@ public class Main extends AbstractVerticle {
          .flatMapMaybe(rxCache ->
             rxCache.get("sample-key")
          )
+         .repeat(numCalls)
+         .reduce(
+            new ArrayList<>()
+            , (l, result) -> {
+               l.add(result);
+               return l;
+            })
          .subscribe(
             x ->
                rc.response().end(String.format(
-                  "Got cache, put/get returned: %s", x
+                  "Got cache, %d calls to put/get returned: %s", numCalls, x
                ))
             , failure -> {
                log.log(Level.SEVERE, "Failure starting injectors", failure);
