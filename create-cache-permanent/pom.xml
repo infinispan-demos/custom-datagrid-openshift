@@ -5,7 +5,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>demo</groupId>
-   <artifactId>first-cache</artifactId>
+   <artifactId>create-cache-permanent</artifactId>
    <version>1.0-SNAPSHOT</version>
 
    <properties>
