@@ -92,3 +92,27 @@ Since the cache created is replicated, invocations are round robin so it distrib
 
 If making changes to the application, only `./deploy.sh` needs to be called unless dependencies are changed.
 If changing dependencies, you should call `./first-deploy.sh` again instead.
+
+
+## Code
+
+In this section you will learn about what makes a cache creation permanent.
+
+To do that, the code first connects connects to the datagrid service by instantiating a RemoteCacheManager.
+That's what the HTTP call to `/connect/datagrid-service` path does.
+
+Then, by calling `/create-cache` a random cache name is generated and using the RemoteCacheManager, the cache is created:
+
+```java
+RemoteCacheManager remoteCacheManager = ...
+
+RemoteCache<K, V> remoteCache = remoteCacheManager
+   .administration()
+      .withFlags(CacheContainerAdmin.AdminFlag.PERMANENT)
+      .createCache(cacheName, "replicated");
+``` 
+
+`AdminFlag.PERMANENT` is makes this cache creation permanent.
+If that flag was left out, the created cache would be ephemeral, so once the datagrid service was restarted, the cache would not be there. 
+Also, note that the remote cache is created using the `replicated` cache template.
+This template is pre-loaded in the datagrid service and provides with a cache that is replicated to all nodes in the cluster.
