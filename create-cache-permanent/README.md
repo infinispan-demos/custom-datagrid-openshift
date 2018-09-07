@@ -13,10 +13,11 @@ $ oc cluster up
 $ oc login -u system:admin
 $ oc create \
   -n openshift \
-  -f https://raw.githubusercontent.com/galderz/jboss-datagrid-7-openshift-image/jdg2055_v2/services/datagrid-service.json
+  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/f91b94cfd7da4630ca188cd43c26755ecfc99bdd/services/datagrid-service.json
 
 $ oc login -u developer
 $ oc process openshift//datagrid-service \
+  -p IMAGE=docker-registry.engineering.redhat.com/gzamarre/datagrid72-openshift:JDG-2055 \
   -p NUMBER_OF_INSTANCES=1 \
   -p APPLICATION_USER=test \
   -p APPLICATION_USER_PASSWORD=test \
@@ -30,7 +31,7 @@ The application generates a random name for the created cache, which the invocat
 $ ./first-deploy.sh
 ...
 
-$ curl http://app-myproject.127.0.0.1.nip.io/connect/caching-service-app/caching-service
+$ curl http://app-myproject.127.0.0.1.nip.io/connect/datagrid-service
 Infinispan connection successful
 
 $ curl http://app-myproject.127.0.0.1.nip.io/create-cache 
@@ -41,7 +42,7 @@ Once the cache is created, make a put/get invocation to the cache:
 
 ```bash
 $ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
-Got cache, put/get returned: sample-value
+Got cache, 1 calls to put/get returned: [sample-value]
 ```
 
 Next, verify that the cache definition survives a complete restart.
@@ -63,7 +64,12 @@ statefulset.apps "datagrid-service" scaled
 You can verify check when the pod is ready by getting a continuous stream of pod events, e.g.
 
 ```bash
-TODO
+$ oc get pods -w                                                                                                                                                master ⬆ ✱ ◼
+NAME                 READY     STATUS      RESTARTS   AGE
+app-1-build          0/1       Completed   0          2m
+app-1-flvz6          1/1       Running     0          1m
+datagrid-service-0   0/1       Running     0          10s
+datagrid-service-0   1/1       Running   0         59s
 ```
 
 Once the pod is ready, make a put/get invocation to the cache.
@@ -71,7 +77,7 @@ If the cache definition was made permanent, this invocation should be successful
 
 ```bash
 $ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
-Got cache, put/get returned: sample-value
+Got cache, 1 calls to put/get returned: [sample-value]
 ```
 
 You can make multiple invocations in one by changing the number at the end of URL, e.g.

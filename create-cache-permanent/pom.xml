@@ -14,7 +14,6 @@
 
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-      <!--<version.infinispan>9.4.0.CR1</version.infinispan>-->
       <version.infinispan>8.5.1.Final-redhat-1</version.infinispan> <!-- JDG 7.2.1 -->
       <version.vertx>3.5.3</version.vertx>
 

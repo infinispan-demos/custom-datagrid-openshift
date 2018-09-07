@@ -24,7 +24,7 @@ public class Main extends AbstractVerticle {
    @Override
    public void start(io.vertx.core.Future<Void> future) {
       Router router = Router.router(vertx);
-      router.get("/connect/:appName/:saslName").handler(this::connect);
+      router.get("/connect/:svcName").handler(this::connect);
       router.get("/create-cache").handler(this::createCache);
       router.get("/destroy-cache").handler(this::destroyCache);
       router.get("/get-cache/:numCalls").handler(this::getCache);
@@ -43,11 +43,10 @@ public class Main extends AbstractVerticle {
    }
 
    private void connect(RoutingContext rc) {
-      String appName = rc.request().getParam("appName");
-      String saslName = rc.request().getParam("saslName");
+      String svcName = rc.request().getParam("svcName");
 
       ConfigurationBuilder cfg =
-         InfinispanCfg.create(appName + "-hotrod", saslName);
+         InfinispanCfg.create(svcName + "-hotrod", svcName);
 
       InfinispanRx.connect(cfg, vertx)
          .subscribe(
