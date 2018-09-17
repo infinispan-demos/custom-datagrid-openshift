@@ -28,21 +28,21 @@ Next, use the sample application provided to connect to the data grid and create
 The application generates a random name for the created cache, which the invocation to `create-cache` returns:
 
 ```bash
-$ ./first-deploy.sh
+$ mvn fabric8:deploy
 ...
 
-$ curl http://app-myproject.127.0.0.1.nip.io/connect/datagrid-service
+$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/connect/datagrid-service
 Infinispan connection successful
 
-$ curl http://app-myproject.127.0.0.1.nip.io/create-cache 
+$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/create-cache 
 Cache f62e4b80-90ca-44ec-9085-231dd9b60335-0 created
 ```
 
 Once the cache is created, make a put/get invocation to the cache:
 
 ```bash
-$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
-Got cache, 1 calls to put/get returned: [sample-value]
+$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/get-cache
+Got cache, put/get returned: sample-value
 ```
 
 Next, verify that the cache definition survives a complete restart.
@@ -66,8 +66,7 @@ You can verify check when the pod is ready by getting a continuous stream of pod
 ```bash
 $ oc get pods -w                                                                                                                                                master ⬆ ✱ ◼
 NAME                 READY     STATUS      RESTARTS   AGE
-app-1-build          0/1       Completed   0          2m
-app-1-flvz6          1/1       Running     0          1m
+...
 datagrid-service-0   0/1       Running     0          10s
 datagrid-service-0   1/1       Running   0         59s
 ```
@@ -76,22 +75,9 @@ Once the pod is ready, make a put/get invocation to the cache.
 If the cache definition was made permanent, this invocation should be successful:
 
 ```bash
-$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/1
-Got cache, 1 calls to put/get returned: [sample-value]
+$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/get-cache
+Got cache, put/get returned: sample-value
 ```
-
-You can make multiple invocations in one by changing the number at the end of URL, e.g.
-
-```bash
-$ curl http://app-myproject.127.0.0.1.nip.io/get-cache/2
-Got cache, 2 calls to put/get returned: [sample-value, sample-value]
-```
-
-This can be useful to verify the same behaviour in a multi-node environment.
-Since the cache created is replicated, invocations are round robin so it distributes calls around the cluster.
-
-If making changes to the application, only `./deploy.sh` needs to be called unless dependencies are changed.
-If changing dependencies, you should call `./first-deploy.sh` again instead.
 
 
 ## Code

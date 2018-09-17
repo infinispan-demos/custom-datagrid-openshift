@@ -17,8 +17,8 @@
       <version.infinispan>8.5.1.Final-redhat-1</version.infinispan> <!-- JDG 7.2.1 -->
       <version.vertx>3.5.3</version.vertx>
 
-      <version.plugin.fabric8-maven>3.5.34</version.plugin.fabric8-maven>
-      <version.plugin.vertx-maven>1.0.13</version.plugin.vertx-maven>
+      <version.plugin.fabric8-maven>3.5.38</version.plugin.fabric8-maven>
+      <version.plugin.vertx-maven>1.0.17</version.plugin.vertx-maven>
 
       <vertx.verticle>app.Main</vertx.verticle>
    </properties>
@@ -70,7 +70,7 @@
             </executions>
          </plugin>
          <plugin>
-            <groupId>io.fabric8</groupId>
+            <groupId>io.reactiverse</groupId>
             <artifactId>vertx-maven-plugin</artifactId>
             <version>${version.plugin.vertx-maven}</version>
             <executions>
