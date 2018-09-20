@@ -51,7 +51,7 @@ public class Main extends AbstractVerticle {
       String svcName = rc.request().getParam("svcName");
 
       ConfigurationBuilder cfg =
-         InfinispanCfg.create(svcName + "-hotrod", svcName);
+         DatagridCfg.create(svcName + "-hotrod", svcName);
 
       vertx.executeBlocking(
          cacheManager(cfg)
