@@ -2,5 +2,6 @@
 .idea
 
 target
+dependency-reduced-pom.xml
 
 openshift.local.clusterup
