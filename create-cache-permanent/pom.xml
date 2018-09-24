@@ -15,10 +15,8 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
       <version.infinispan>8.5.1.Final-redhat-1</version.infinispan> <!-- JDG 7.2.1 -->
-      <version.vertx>3.5.3</version.vertx>
 
       <version.plugin.fabric8-maven>3.5.38</version.plugin.fabric8-maven>
-      <version.plugin.vertx-maven>1.0.17</version.plugin.vertx-maven>
       <version.plugin.shade-maven>3.1.0</version.plugin.shade-maven>
 
       <main.class.create-cache>app.CreateCache</main.class.create-cache>
@@ -26,8 +24,6 @@
 
       <fabric8-maven-plugin.from.image>fabric8/s2i-java:2.0</fabric8-maven-plugin.from.image>
       <fabric8-maven-plugin.image.name>%g/%a:%v</fabric8-maven-plugin.image.name>
-
-      <vertx.verticle>app.Main</vertx.verticle>
    </properties>
 
    <dependencyManagement>
@@ -39,13 +35,6 @@
             <scope>import</scope>
             <type>pom</type>
          </dependency>
-         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-dependencies</artifactId>
-            <version>${version.vertx}</version>
-            <type>pom</type>
-            <scope>import</scope>
-         </dependency>
       </dependencies>
    </dependencyManagement>
 
@@ -54,29 +43,10 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-client-hotrod</artifactId>
       </dependency>
-      <dependency>
-         <groupId>io.vertx</groupId>
-         <artifactId>vertx-web</artifactId>
-      </dependency>
    </dependencies>
 
    <build>
       <plugins>
-         <!--<plugin>-->
-            <!--<groupId>io.fabric8</groupId>-->
-            <!--<artifactId>fabric8-maven-plugin</artifactId>-->
-            <!--<version>${version.plugin.fabric8-maven}</version>-->
-            <!--<executions>-->
-               <!--<execution>-->
-                  <!--<id>fmp</id>-->
-                  <!--<goals>-->
-                     <!--<goal>resource</goal>-->
-                     <!--<goal>build</goal>-->
-                  <!--</goals>-->
-               <!--</execution>-->
-            <!--</executions>-->
-         <!--</plugin>-->
-
          <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>fabric8-maven-plugin</artifactId>
@@ -108,24 +78,6 @@
                </images>
             </configuration>
          </plugin>
-
-         <!--<plugin>-->
-            <!--<groupId>io.reactiverse</groupId>-->
-            <!--<artifactId>vertx-maven-plugin</artifactId>-->
-            <!--<version>${version.plugin.vertx-maven}</version>-->
-            <!--<executions>-->
-               <!--<execution>-->
-                  <!--<id>vmp</id>-->
-                  <!--<goals>-->
-                     <!--<goal>initialize</goal>-->
-                     <!--<goal>package</goal>-->
-                  <!--</goals>-->
-               <!--</execution>-->
-            <!--</executions>-->
-            <!--<configuration>-->
-               <!--<redeploy>true</redeploy>-->
-            <!--</configuration>-->
-         <!--</plugin>-->
       </plugins>
    </build>
 
