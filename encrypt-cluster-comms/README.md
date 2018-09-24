@@ -1,104 +1,53 @@
 # Encrypting Cluster Communication
-Learn how to create OpenShift secrets.
+Create OpenShift secrets to encrypt traffic between clients and servers as well as clustered servers.
 
-## Environment Variables for Encrypting Communication
+## Certificates and Keystores
+Data Grid can use keystores to encrypt network traffic.
 
-Data Grid uses the following environment variables to encrypt communication between clients and servers:
+You can use OpenSSL and the Java keytool to generate HTTPS and JGroups keystores.
+
+### HTTPS Keystore
+The HTTPS keystore (`.jks`) contains a username and password that clients use to authenticate with the server. The HTTPS keystore should also contain a signed TLS certificate that it presents to clients.
+
+**IMPORTANT:** In production environments, you should submit a certificate signing request (CSR) to a verified certificate authority (CA) to sign the TLS certificate.
+
+**NOTE:**
+When you generate a TLS certificate for the HTTPS keystore, you should specify the domain name for the deployment. For example:
+`-dname "CN=rhdg-https-demo.openshift32.example.com"`.
+
+Configure your deployment to use the HTTPS keystore with the following environment variables:
 
 * `HOSTNAME_HTTP` specifies the HTTP service route for the deployment.
 * `HOSTNAME_HTTPS` specifies the HTTPS service route for the deployment.
 * `HTTPS_KEYSTORE` specifies the name of a keystore that contains an TLS certificate secures communication with the Data Grid application.
 * `HTTPS_SECRET` specifies the name of the OpenShift secret that contains the keystore.
 * `HTTPS_NAME` sets the name that is associated with the TLS certificate in the keystore.
-* `HTTPS_PASSWORD` sets the password for the TLS certificate.
+* `HTTPS_PASSWORD` sets the password for the TLS certificate in the keystore.
 
-Data Grid uses JGroups technology to encrypt traffic between clustered servers with the following environment variables:
+### JGroups Keystore
+Data Grid uses JGroups technology to encrypt traffic between clustered servers. The JGroups keystore (`.jceks`) contains a key and password that clustered servers can use to encrypt traffic.
+
+Configure your deployment to use the JGroups keystore with the following environment variables:
 
 * `JGROUPS_ENCRYPT_KEYSTORE` specifes the name of a keystore that contains a secret key for encrypting cluster traffic.
 * `JGROUPS_ENCRYPT_SECRET` specifies the name of the OpenShift secret that contains the keystore.
 * `JGROUPS_ENCRYPT_PASSWORD` sets the password for the keystore.
 
-## Generating Certificates and Keystores
-Data Grid uses TLS certificates and keystores to encrypt cluster communication.
-In the following section, you can create example certificates and keystores
-that demonstrate how to encrypt cluster communication.
+## Creating OpenShift Secrets for Encrypted Traffic
+After you create an HTTPS and JGroups keystore, you must make them available in OpenShift as secrets.
 
-### Creating a CA-Signed Certificate
-To secure Data Grid traffic, the HTTPS keystore must contain a certificate that is signed by a certificate authority.
+For example, you create an HTTPS keystore named *rhdg-https.jks* and a JGroups keystore named *jgroups.jceks*.
 
-**IMPORTANT:** In production environments, you should not generate a
-certificate authority (CA) but submit your certificate signing request (CSR) to
-a verified CA.
+You can create secrets with these keystores as follows:
 
-1. Generate a CA certificate.
-  ```bash
-  $ openssl req -new -newkey rsa:4096 -x509 -keyout my-ca.key -out my-ca.crt -days 365 -subj "/CN=my-cert-authority.ca"
-  ```
-2. Generate a certificate for the HTTPS keystore.
-  ```bash
-  $ keytool -genkeypair -keyalg RSA -keysize 2048 -dname "CN=rhdg-https-demo.openshift32.example.com" -alias rhdg-https-key -deststoretype pkcs12 -keystore rhdg-https.jks
-  ```
-3. Generate a CSR for the certificate in the HTTPS keystore.
-  ```bash
-  $ keytool -certreq -keyalg rsa -alias rhdg-https-key -keystore rhdg-https.jks -file rhdg.csr
-  ```
-
-4. Sign the CSR with the CA certificate.
-  ```bash
-  $ openssl x509 -req -CA my-ca.crt -CAkey my-ca.key -in rhdg.csr -out rhdg-https.crt -days 365 -CAcreateserial
-  ```
-
-### Importing Certificates into the HTTPS Keystore
-After you sign the certificate in the HTTPS keystore, you must import the certificate along with the CSR and CA certificate.
-
-1. Import the CA into the HTTPS keystore.
-  ```bash
-  $ keytool -import -file my-ca.crt -alias my-ca.ca -keystore rhdg-https.jks
-  ```
-
-2. Import the signed CSR into the HTTPS keystore.
-  ```bash
-  $ keytool -import -file rhdg-https.crt -alias rhdg-https-key -keystore rhdg-https.jks
-  ```
-
-3. Import the CA into the HTTPS keystore.
-  ```bash
-  $ keytool -import -file my-ca.crt -alias my-ca.ca -keystore truststore.jks
-  ```
-
-### Generating a secure key for the JGroups keystore.
-Generate a secure in a JGroups keystore as follows:
-```bash
-$ keytool -genkey -alias jgroups -keystore jgroups.jceks -storetype PKCS12 -keyalg RSA -validity 730 -keysize 2048
-```
-
-## Importing the Data Grid HTTPS Application
-Import the Data Grid image stream and `HTTPS` template as follows:
-```bash
-$ oc login -u system:admin
-
-$ oc create \
-  -n openshift \
-  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/1.1/templates/datagrid72-image-stream.json
-
-$ oc create \
-  -n openshift \
-  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/1.1/templates/datagrid72-https.json
-```
-
-## Creating a Project and Importing Secrets
-Create a new project, configure roles, and then import the HTTPS and JGroups keystores as OpenShift secrets.
-
-1. Log in as the developer user and create a new project.
+1. Log in as the developer user.
   ```bash
   $ oc login -u developer
-
-  $ oc new-project rhdg-https
   ```
 
 2. Create a secret for the HTTPS keystore.
   ```bash
-  $ oc create secret generic rhdg-https-secret --from-file=rhdg-https.jks --from-file=truststore.jks
+  $ oc create secret generic rhdg-https-secret --from-file=rhdg-https.jks
   ```
 
 3. Create a secret for the JGroups keystore.
@@ -111,8 +60,8 @@ Create a new project, configure roles, and then import the HTTPS and JGroups key
   $ oc secrets link default https-jgroup-secret rhdg-https-secret
   ```
 
-## Deploying Data Grid with HTTPS
-Create a new application from the Data Grid `HTTPS` template and set environment variables as follows:
+You can now add the secrets to deployments. For example, to create a new deployment from the `datagrid72-https` template, do the following:
+
 ```bash
 $ oc new-app --template=datagrid72-https --name=rhdg-https \
   -e HTTPS_SECRET=rhdg-https-secret \
@@ -120,3 +69,26 @@ $ oc new-app --template=datagrid72-https --name=rhdg-https \
   -e JGROUPS_ENCRYPT_SECRET=https-jgroup-secret \
   -e JGROUPS_ENCRYPT_KEYSTORE=jgroups.jceks
 ```
+
+## Trying Example Secrets
+Data Grid provides example HTTPS and JGroups keystores that you can import as OpenShift secrets for evaluation purposes.
+
+Do the following to import and create the example secrets:
+
+```bash
+$ oc login -u system:admin
+
+$ oc create \
+  -n openshift \
+  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/1.1/templates/datagrid72-image-stream.json
+
+$ oc create \
+  -n openshift \
+  -f https://raw.githubusercontent.com/jboss-openshift/application-templates/master/secrets/datagrid-app-secret.json
+
+$ oc create \
+  -n openshift \
+  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/1.1/templates/datagrid72-https.json
+```
+
+You can now log in as the `developer` user and create a deployment with the `datagrid72-https` template that uses the example secrets.
