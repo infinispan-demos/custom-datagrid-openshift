@@ -17,13 +17,13 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-class InfinispanCfg {
+class DatagridCfg {
 
    private static final String CRT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt";
    private static final char[] TRUSTSTORE_PASSWORD = "secret".toCharArray();
    private static final String TRUSTSTORE_PATH = "truststore.pkcs12";
 
-   private InfinispanCfg() {
+   private DatagridCfg() {
    }
 
    static ConfigurationBuilder create(String svcName, String saslName) {

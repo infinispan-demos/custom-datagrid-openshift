@@ -25,24 +25,20 @@ $ oc process openshift//datagrid-service \
 ```
 
 Next, use the sample application provided to connect to the data grid and create a cache.
-The application generates a random name for the created cache, which the invocation to `create-cache` returns:
+The application generates a random name for the created cache:
 
 ```bash
-$ mvn fabric8:deploy
+$ mvn fabric8:run -Pcreate-cache
 ...
-
-$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/connect/datagrid-service
-Infinispan connection successful
-
-$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/create-cache 
-Cache f62e4b80-90ca-44ec-9085-231dd9b60335-0 created
+[INFO] F8: --- Cache 'custom' created ---
 ```
 
 Once the cache is created, make a put/get invocation to the cache:
 
 ```bash
-$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/get-cache
-Got cache, put/get returned: sample-value
+$ mvn fabric8:run -Pget-cache
+...
+[INFO] F8: --- Got cache, put/get returned: sample-value ---
 ```
 
 Next, verify that the cache definition survives a complete restart.
@@ -68,15 +64,16 @@ $ oc get pods -w                                                                
 NAME                 READY     STATUS      RESTARTS   AGE
 ...
 datagrid-service-0   0/1       Running     0          10s
-datagrid-service-0   1/1       Running   0         59s
+datagrid-service-0   1/1       Running     0          44s
 ```
 
 Once the pod is ready, make a put/get invocation to the cache.
 If the cache definition was made permanent, this invocation should be successful:
 
 ```bash
-$ curl http://create-cache-permanent-myproject.127.0.0.1.nip.io/get-cache
-Got cache, put/get returned: sample-value
+$  mvn fabric8:run -Pget-cache
+...
+[INFO] F8: --- Got cache, put/get returned: sample-value ---
 ```
 
 
@@ -85,9 +82,7 @@ Got cache, put/get returned: sample-value
 In this section you will learn about what makes a cache creation permanent.
 
 To do that, the code first connects connects to the datagrid service by instantiating a RemoteCacheManager.
-That's what the HTTP call to `/connect/datagrid-service` path does.
-
-Then, by calling `/create-cache` a random cache name is generated and using the RemoteCacheManager, the cache is created:
+Then, by calling `mvn fabric8:run -Pcreate-cache` a random cache name is generated and using the RemoteCacheManager, the cache is created:
 
 ```java
 RemoteCacheManager remoteCacheManager = ...
