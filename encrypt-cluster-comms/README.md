@@ -3,7 +3,7 @@ Learn how to create OpenShift secrets.
 
 ## Environment Variables for Encrypting Communication
 
-Data Grid uses the following environment variables to encrypt communication:
+Data Grid uses the following environment variables to encrypt communication between clients and servers:
 
 * `HOSTNAME_HTTP` specifies the HTTP service route for the deployment.
 * `HOSTNAME_HTTPS` specifies the HTTPS service route for the deployment.
@@ -12,7 +12,7 @@ Data Grid uses the following environment variables to encrypt communication:
 * `HTTPS_NAME` sets the name that is associated with the TLS certificate in the keystore.
 * `HTTPS_PASSWORD` sets the password for the TLS certificate.
 
-Data Grid uses JGroups technology to encrypt cluster traffic with the following environment variables:
+Data Grid uses JGroups technology to encrypt traffic between clustered servers with the following environment variables:
 
 * `JGROUPS_ENCRYPT_KEYSTORE` specifes the name of a keystore that contains a secret key for encrypting cluster traffic.
 * `JGROUPS_ENCRYPT_SECRET` specifies the name of the OpenShift secret that contains the keystore.
@@ -96,22 +96,17 @@ Create a new project, configure roles, and then import the HTTPS and JGroups key
   $ oc new-project rhdg-https
   ```
 
-2. Add the view role to the default service account to allow access to resources in your project, which is required to manage the cluster.
-  ```bash
-  $ oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
-  ```
-
-3. Create a secret for the HTTPS keystore.
+2. Create a secret for the HTTPS keystore.
   ```bash
   $ oc create secret generic rhdg-https-secret --from-file=rhdg-https.jks --from-file=truststore.jks
   ```
 
-4. Create a secret for the JGroups keystore.
+3. Create a secret for the JGroups keystore.
   ```bash
   $ oc create secret generic https-jgroup-secret --from-file=jgroups.jceks
   ```
 
-5. Link secrets to the default service account.
+4. Link secrets to the default service account.
   ```bash
   $ oc secrets link default https-jgroup-secret rhdg-https-secret
   ```
