@@ -55,24 +55,24 @@ This repository contains:
 
 1. Scale the Data Grid stateful set to `0` replicas.
   ```bash
-  $ oc get sts
+  $ oc get statefulsets
   NAME               DESIRED   CURRENT   AGE
   datagrid-service   1         1         19m
 
-  $ oc scale sts datagrid-service --replicas=0
+  $ oc scale statefulsets datagrid-service --replicas=0
   statefulset "datagrid-service" scaled
 
-  $ oc get sts
+  $ oc get statefulsets
   NAME               DESIRED   CURRENT   AGE
   datagrid-service   0         0         7m
   ```
 
 2. Scale the Data Grid stateful set to `1` replica.
   ```bash
-  $ oc scale sts datagrid-service --replicas=1
+  $ oc scale statefulsets datagrid-service --replicas=1
   statefulset "datagrid-service" scaled
 
-  $ oc get sts
+  $ oc get statefulsets
   NAME               DESIRED   CURRENT   AGE
   datagrid-service   1         1         7m
   ```
