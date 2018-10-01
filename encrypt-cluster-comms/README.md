@@ -1,5 +1,5 @@
 # Encrypting Cluster Communication
-Create OpenShift secrets to encrypt traffic between clients and servers as well as clustered servers.
+Create OpenShift secrets to encrypt client to server and server to server traffic.
 
 ## Certificates and Keystores
 Data Grid can use keystores to encrypt network traffic.
