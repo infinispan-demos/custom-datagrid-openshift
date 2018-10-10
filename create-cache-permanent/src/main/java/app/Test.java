@@ -3,7 +3,8 @@ package app;
 public class Test {
 
    public static void main(String[] args) {
-      System.out.println("Hello world!");
+      final String name = System.getenv("PARAM");
+      System.out.printf("Hello %s!%n", name);
    }
 
 }
