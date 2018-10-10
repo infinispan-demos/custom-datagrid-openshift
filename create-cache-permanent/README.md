@@ -4,10 +4,10 @@ Learn how to create permanent cache instances with Red Hat Data Grid.
 A permanent cache can survive between application restarts so you only need to create the cache once. However, data that resides in the cache is not persisted between restarts unless you configure persistent storage.
 
 This repository contains:
-* A set of Java class files that demonstrate how to programmatically create a cache instance and perform `GET` and `PUT` operations on the cache.
+* A set of Java class files that demonstrate how to programmatically create a cache instance and perform `get` and `put` operations on the cache.
 * A `pom.xml` file that defines properties and dependencies for compiling the Java class files into an application.
 
-## Creating a Data Grid Pod
+## Creating a Data Grid pod
 
 1. Import the Data Grid service template if it is not already available.
   ```bash
@@ -22,36 +22,45 @@ This repository contains:
   ```bash
   $ oc login -u developer
 
-  $ oc process openshift//datagrid-service \
+  $ oc new-app datagrid-service \
     -p IMAGE=docker-registry.engineering.redhat.com/gzamarre/datagrid72-openshift:JDG-2055 \
     -p NUMBER_OF_INSTANCES=1 \
     -p APPLICATION_USER=test \
-    -p APPLICATION_USER_PASSWORD=test \
-    | oc create -f -
+    -p APPLICATION_USER_PASSWORD=test
   ```
 
-## Creating a Permanent Cache
+> **NOTE:** To get started quickly, this tutorial supplies `setup.sh` helper script which instantiates a local OpenShift cluster and executes the steps above.  
 
-1. Change to the `create-cache-permanent` directory in this repository.
-  ```bash
-  $ cd create-cache-permanent
-  ```
+## Build the tutorial
 
-2. Use the sample application to create a cache named `custom`.
+Before running any of the code, it is necessary to build the sample code provided with the tutorial.
+Both Maven and OpenShift clien libraries must available in the path to build the code:
+
+```bash
+$ ./build.sh
+...
+Push successful
+```
+
+If you are adapting the code in this tutorial, make sure you call `build.sh` again.
+
+## Creating a permanent Cache
+
+1. Use the sample application to create a cache named `custom` in the `datagrid-service`.
   ```bash
-  $ mvn fabric8:run -Pcreate-cache
+  $ ./run.sh create-cache datagrid-service
   ...
-  [INFO] F8: --- Cache 'custom' created ---
+  --- Cache 'custom' created in 'datagrid-service'   ---
   ```
 
-3. Add an entry to the cache with a `get/put` invocation.
+2. Add an entry to the cache with a `put` invocation and do a `get` on the same key.
   ```bash
-  $ mvn fabric8:run -Pget-cache
+  $ ./run.sh get-cache datagrid-service
   ...
-  [INFO] F8: --- Got cache, put/get returned: sample-value ---
+  --- Got cache, put/get returned: sample-value ---
   ```
 
-## Verifying that the Cache is Permanent
+## Verifying that the Cache is permanent
 
 1. Scale the Data Grid stateful set to `0` replicas.
   ```bash
@@ -89,9 +98,9 @@ This repository contains:
 
 4. Check that the sample entry you created still exists in the cache.
   ```bash
-  $ mvn fabric8:run -Pget-cache
+  $ ./run.sh get-cache datagrid-service
   ...
-  [INFO] F8: --- Got cache, put/get returned: sample-value ---
+  --- Got cache, put/get returned: sample-value ---
   ```
 
 ## Looking at the Sample Code
@@ -113,3 +122,19 @@ RemoteCache<K, V> remoteCache = remoteCacheManager
 `AdminFlag.PERMANENT` creates a permanent cache. If that flag is not included, an ephemeral cache is created.
 
 The remote cache is also created using the `replicated` cache template that is included in the Data Grid service. As a result, the cache is replicated to all nodes in the cluster.
+
+## Destroying a permanent Cache
+
+A second invocation to create the cache would fail because the cache already exists.
+This can be solved in two different ways:
+
+One option is to modify the source code so that `getOrCreateCache` method in `RemoteCacheManagerAdmin` is called instead of `createCache`.
+ 
+Another way is to destroy the cache and then call create cache again.
+This can be achieved with the tutorial by calling:
+
+```bash
+$  ./run.sh destroy-cache datagrid-service
+...
+--- Cache 'custom' destroyed in 'datagrid-service' ---
+```  

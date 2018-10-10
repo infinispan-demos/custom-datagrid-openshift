@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 
-#set -e -x
 set -e
+
+if [ "$#" -ne 2 ]
+then
+  echo "Usage: run.sh [create-cache|get-cache] NAME"
+  exit 1
+fi
+
 
 oc delete all --selector=run=app || true
 
@@ -13,7 +19,8 @@ oc run app \
   --image=$(getImageName) \
   --replicas=1 \
   --restart=OnFailure \
-  --env PARAM=RedHat
+  --env CMD=$1 \
+  --env NAME=$2
 
 
 getPodStatus() {
@@ -21,7 +28,7 @@ getPodStatus() {
 }
 
 status=NA
-while [ "$status" != "Succeeded" ];
+while [ "$status" != "Running" ];
 do
   status=$(getPodStatus)
   echo "Status of pod: ${status}"
@@ -33,4 +40,4 @@ getPodName() {
   oc get pod -l run=app -o jsonpath="{.items[0].metadata.name}"
 }
 
-oc logs $(getPodName)
+oc logs $(getPodName) -f

@@ -9,7 +9,7 @@ ENV JAVA_APP_DIR=/deployments
 ENV JAVA_LIB_DIR=/deployments/libs
 ENV JAVA_CLASSPATH=${JAVA_APP_DIR}/classes:${JAVA_LIB_DIR}/*
 ENV JAVA_OPTIONS=""
-ENV JAVA_MAIN_CLASS="app.Test"
+ENV JAVA_MAIN_CLASS="app.Main"
 
 # Copy classes
 COPY target/classes /deployments/classes

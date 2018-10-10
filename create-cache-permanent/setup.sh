@@ -15,5 +15,4 @@ oc new-app datagrid-service \
    -p IMAGE=docker-registry.engineering.redhat.com/gzamarre/datagrid72-openshift:JDG-2055 \
    -p NUMBER_OF_INSTANCES=1 \
    -p APPLICATION_USER=test \
-   -p APPLICATION_USER_PASSWORD=test \
-   -e SCRIPT_DEBUG=true
+   -p APPLICATION_USER_PASSWORD=test
