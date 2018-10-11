@@ -8,8 +8,14 @@ oc project myproject
 APP=app
 
 # || true to make it idempotent
-oc new-build --binary --name=${APP} -l app=${APP} || true
+oc new-build \
+  --binary \
+  --strategy=source \
+  --name=${APP} \
+  -l app=${APP} \
+  fabric8/s2i-java:2.3 \
+  || true
 
-mvn -s settings.xml clean dependency:copy-dependencies compile -DincludeScope=runtime
+mvn -s settings.xml clean package compile -DincludeScope=runtime
 
-oc start-build ${APP} --from-dir=. --follow
+oc start-build ${APP} --from-dir=target/ --follow
