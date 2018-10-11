@@ -1,88 +1,110 @@
-# Create Cache Permanent
+# Creating Permanent Caches
+Permanent caches survive between application restarts. You only need to create a permanent cache once.
 
-This demo shows how to create a cache permanently using the datagrid service.
-By making it permanent, the cache only needs to be created once and its definition survive complete data grid restarts.
-Creating a cache permanently does not imply that its data will be persisted.
-To achieve that, the cache needs to be configured with a persistent store.
+_NOTE:_ Data in the cache is not persisted between restarts unless you add storage.
 
-To run this demo, start OpenShift first, then load and instantiate the template with one instance:
+This repository contains:
 
-```bash
-$ oc cluster up
+* A set of Java class files that demonstrate how to programmatically create a cache instance and perform get and put operations on the cache.
+* A `pom.xml` file that defines properties and dependencies for compiling the Java class files into an application.
 
-$ oc login -u system:admin
-$ oc create \
-  -n openshift \
-  -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/f91b94cfd7da4630ca188cd43c26755ecfc99bdd/services/datagrid-service.json
+## System Requirements
 
-$ oc login -u developer
-$ oc process openshift//datagrid-service \
-  -p IMAGE=docker-registry.engineering.redhat.com/gzamarre/datagrid72-openshift:JDG-2055 \
-  -p NUMBER_OF_INSTANCES=1 \
-  -p APPLICATION_USER=test \
-  -p APPLICATION_USER_PASSWORD=test \
-  | oc create -f -
-```
+* Java 8.0 (Java SDK 1.8) or later.
+* Maven 3.0 or later.
+* A running OpenShift environment.
 
-Next, use the sample application provided to connect to the data grid and create a cache.
-The application generates a random name for the created cache:
+## Creating a Data Grid Service
 
-```bash
-$ mvn fabric8:run -Pcreate-cache
-...
-[INFO] F8: --- Cache 'custom' created ---
-```
+1. Import the Data Grid service if necessary.
+  ```bash
+  $ oc login -u system:admin
 
-Once the cache is created, make a put/get invocation to the cache:
+  $ oc create \
+    -n openshift \
+    -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/f91b94cfd7da4630ca188cd43c26755ecfc99bdd/services/datagrid-service.json
+  ```
 
-```bash
-$ mvn fabric8:run -Pget-cache
-...
-[INFO] F8: --- Got cache, put/get returned: sample-value ---
-```
+2. Create a new Data Grid service.
+  ```bash
+  $ oc login -u developer
 
-Next, verify that the cache definition survives a complete restart.
-To do that, scale down the data grid stateful set to 0 replicas.
-Then, scale up the data grid stateful set to 1 replica and wait for the pod to be ready.
+  $ oc new-app datagrid-service \
+    -p IMAGE=docker-registry.engineering.redhat.com/gzamarre/datagrid72-openshift:JDG-2055 \
+    -p NUMBER_OF_INSTANCES=1 \
+    -p APPLICATION_USER=test \
+    -p APPLICATION_USER_PASSWORD=test
+  ```
 
-```bash
-$ oc get statefulsets
-NAME               DESIRED   CURRENT   AGE
-datagrid-service   1         1         19m
+## Creating a Permanent Cache
 
-$ oc scale statefulsets datagrid-service --replicas=0
-statefulset.apps "datagrid-service" scaled
+1. Run the sample application to connect to the Data Grid service and create a cache.
+  ```bash
+  $ mvn fabric8:run -Pcreate-cache
+  ...
+  [INFO] F8: --- Connect to datagrid-service ---
+  ...
+  [INFO] F8: --- Create cache in datagrid-service ---
+  ...
+  [INFO] F8: --- Cache 'custom' created ---
+  ```
 
-$ oc scale statefulsets datagrid-service --replicas=1
-statefulset.apps "datagrid-service" scaled
-```
+2. Invoke a put/get operation on the cache as follows:
+  ```bash
+  $ mvn fabric8:run -Pget-cache
+  ...
+  [INFO] F8: --- Got cache, put/get returned: sample-value ---
+  ```
 
-You can verify check when the pod is ready by getting a continuous stream of pod events, e.g.
+## Verifying that the Cache is Permanent
+To verify the cache is permanent, scale the Data Grid service down and then up.
 
-```bash
-$ oc get pods -w                                                                                                                                                master ⬆ ✱ ◼
-NAME                 READY     STATUS      RESTARTS   AGE
-...
-datagrid-service-0   0/1       Running     0          10s
-datagrid-service-0   1/1       Running     0          44s
-```
+1. Scale the Data Grid stateful set to `0` replicas.
+  ```bash
+  $ oc get statefulsets
+  NAME               DESIRED   CURRENT   AGE
+  datagrid-service   1         1         19m
 
-Once the pod is ready, make a put/get invocation to the cache.
-If the cache definition was made permanent, this invocation should be successful:
+  $ oc scale statefulsets datagrid-service --replicas=0
+  statefulset "datagrid-service" scaled
 
-```bash
-$  mvn fabric8:run -Pget-cache
-...
-[INFO] F8: --- Got cache, put/get returned: sample-value ---
-```
+  $ oc get statefulsets
+  NAME               DESIRED   CURRENT   AGE
+  datagrid-service   0         0         7m
+  ```
 
+2. Scale the Data Grid stateful set to `1` replica.
+  ```bash
+  $ oc scale statefulsets datagrid-service --replicas=1
+  statefulset "datagrid-service" scaled
 
-## Code
+  $ oc get statefulsets
+  NAME               DESIRED   CURRENT   AGE
+  datagrid-service   1         1         7m
+  ```
 
-In this section you will learn about what makes a cache creation permanent.
+3. Watch the pod until the Data Grid service starts running.
+  ```bash
+  $ oc get pods -w
+  NAME                 READY     STATUS      RESTARTS   AGE
+  ...
+  datagrid-service-0   0/1       Running     0          10s
+  datagrid-service-0   1/1       Running     0          44s
+  ```
 
-To do that, the code first connects connects to the datagrid service by instantiating a RemoteCacheManager.
-Then, by calling `mvn fabric8:run -Pcreate-cache` a random cache name is generated and using the RemoteCacheManager, the cache is created:
+4. Check that the sample entry you created still exists in the cache.
+  ```bash
+  $  mvn fabric8:run -Pget-cache
+  ...
+  [INFO] F8: --- Got cache, put/get returned: sample-value ---
+  ```
+
+## Looking at the Sample Code
+As demonstrated in the preceding steps, the sample application creates permanent cache instances with the Data Grid service.
+
+The first step is to instantiate `RemoteCacheManager` to connect to the Data Grid service.
+
+When you call `mvn fabric8:run -Pcreate-cache`, the application generates a random name for the cache and creates it using `RemoteCacheManager`.
 
 ```java
 RemoteCacheManager remoteCacheManager = ...
@@ -91,9 +113,8 @@ RemoteCache<K, V> remoteCache = remoteCacheManager
    .administration()
       .withFlags(CacheContainerAdmin.AdminFlag.PERMANENT)
       .createCache(cacheName, "replicated");
-``` 
+```
 
-`AdminFlag.PERMANENT` is makes this cache creation permanent.
-If that flag was left out, the created cache would be ephemeral, so once the datagrid service was restarted, the cache would not be there. 
-Also, note that the remote cache is created using the `replicated` cache template.
-This template is pre-loaded in the datagrid service and provides with a cache that is replicated to all nodes in the cluster.
+`AdminFlag.PERMANENT` creates a permanent cache. If that flag is not included, an ephemeral cache is created.
+
+The remote cache is also created using the `replicated` cache template that is included in the Data Grid service. As a result, the cache is replicated to all nodes in the cluster.
