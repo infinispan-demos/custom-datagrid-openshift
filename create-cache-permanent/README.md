@@ -1,15 +1,25 @@
-# Creating a Permanent Cache
-Learn how to create permanent cache instances with Red Hat Data Grid.
+# Creating Permanent Caches
+Permanent caches survive between application restarts. You only need to create a permanent cache once.
 
-A permanent cache can survive between application restarts so you only need to create the cache once. However, data that resides in the cache is not persisted between restarts unless you configure persistent storage.
+_NOTE:_ Data in the cache is not persisted between restarts unless you add storage.
 
 This repository contains:
+
 * A set of Java class files that demonstrate how to programmatically create a cache instance and perform `get` and `put` operations on the cache.
 * A `pom.xml` file that defines properties and dependencies for compiling the Java class files into an application.
 
-## Creating a Data Grid pod
+## System Requirements
 
-1. Import the Data Grid service template if it is not already available.
+* Java 8.0 (Java SDK 1.8) or later.
+* Maven 3.0 or later.
+* A running OpenShift environment.
+* An `oc` client in your `$PATH`.
+
+## Creating a Data Grid Service
+
+> **SHORTCUT:** Run `setup.sh` to instantiate a local Red Hat OpenShift cluster and perform the following steps.
+
+1. Import the Data Grid service if necessary.
   ```bash
   $ oc login -u system:admin
 
@@ -18,7 +28,7 @@ This repository contains:
     -f https://raw.githubusercontent.com/jboss-container-images/jboss-datagrid-7-openshift-image/f91b94cfd7da4630ca188cd43c26755ecfc99bdd/services/datagrid-service.json
   ```
 
-2. Instantiate the template with the Data Grid image.
+2. Create a new Data Grid service.
   ```bash
   $ oc login -u developer
 
@@ -29,12 +39,8 @@ This repository contains:
     -p APPLICATION_USER_PASSWORD=test
   ```
 
-> **NOTE:** To get started quickly, this tutorial supplies `setup.sh` helper script which instantiates a local OpenShift cluster and executes the steps above.  
-
-## Build the tutorial
-
-Before running any of the code, it is necessary to build the sample code provided with the tutorial.
-Both Maven and OpenShift clien libraries must available in the path to build the code:
+## Building the Sample Application
+Run `build.sh` to build the sample application:
 
 ```bash
 $ ./build.sh
@@ -42,11 +48,11 @@ $ ./build.sh
 Push successful
 ```
 
-If you are adapting the code in this tutorial, make sure you call `build.sh` again.
+> **NOTE:** You must run `build.sh` to pick up any changes you make to the sample application.
 
-## Creating a permanent Cache
+## Creating a Permanent Cache
 
-1. Use the sample application to create a cache named `custom` in the `datagrid-service`.
+1. Run the sample application to connect to the Data Grid service and create a cache named `custom`.
   ```bash
   $ ./run.sh create-cache datagrid-service
   ...
@@ -60,9 +66,10 @@ If you are adapting the code in this tutorial, make sure you call `build.sh` aga
   --- Got cache, put/get returned: sample-value ---
   ```
 
-## Verifying that the Cache is permanent
+## Verifying that the Cache is Permanent
+To verify the cache is permanent, scale the Data Grid service down and then up.
 
-1. Scale the Data Grid stateful set to `0` replicas.
+1. Scale the Data Grid statefulset to `0` replicas.
   ```bash
   $ oc get statefulsets
   NAME               DESIRED   CURRENT   AGE
@@ -86,7 +93,7 @@ If you are adapting the code in this tutorial, make sure you call `build.sh` aga
   datagrid-service   1         1         7m
   ```
 
-3. Watch the pod and wait until the Data Grid service starts running.
+3. Watch the pod until the Data Grid service starts running.
   ```bash
   $ oc get pods -w
   NAME                                 READY     STATUS      RESTARTS   AGE
@@ -104,11 +111,11 @@ If you are adapting the code in this tutorial, make sure you call `build.sh` aga
   ```
 
 ## Looking at the Sample Code
-As demonstrated in the preceding steps, the sample application shows how to create permanent cache instances with the Data Grid service. You can create your own applications to do this too.
+As demonstrated in the preceding steps, the sample application creates permanent cache instances with the Data Grid service.
 
 The first step is to instantiate `RemoteCacheManager` to connect to the Data Grid service.
 
-When you call `mvn fabric8:run -Pcreate-cache` the application generates a random cache name and creates the cache using `RemoteCacheManager` as follows:
+The sample application calls the `createCache` method to create a cache using a specified configuration, as follows:
 
 ```java
 RemoteCacheManager remoteCacheManager = ...
@@ -119,19 +126,16 @@ RemoteCache<K, V> remoteCache = remoteCacheManager
       .createCache(cacheName, "replicated");
 ```
 
-`AdminFlag.PERMANENT` creates a permanent cache. If that flag is not included, an ephemeral cache is created.
+* `AdminFlag.PERMANENT` creates a permanent cache. If that flag is not included, an ephemeral cache is created.
+* `replicated` specifies the cache template that is included in the Data Grid service to replicate the cache to all nodes in the cluster.
 
-The remote cache is also created using the `replicated` cache template that is included in the Data Grid service. As a result, the cache is replicated to all nodes in the cluster.
+## Avoiding Exceptions with Existing Caches
+Creating a cache with the `createCache` method fails if one already exists and an exception is thrown. You have two options in this scenario:
 
-## Destroying a permanent Cache
+* Call the `getOrCreateCache` method in `RemoteCacheManagerAdmin` instead of the `createCache` method. If a cache already exists, the `getOrCreateCache` method returns the name instead of throwing an exception.
+* Call the `removeCache` method in `RemoteCacheManagerAdmin` to destroy the existing cache and then call the `createCache` method again.
 
-A second invocation to create the cache would fail because the cache already exists.
-This can be solved in two different ways:
-
-One option is to modify the source code so that `getOrCreateCache` method in `RemoteCacheManagerAdmin` is called instead of `createCache`.
- 
-Another way is to destroy the cache and then call create cache again.
-This can be achieved with the tutorial by calling:
+Run the following to destroy the cache with the sample application:
 
 ```bash
 $  ./run.sh destroy-cache datagrid-service
